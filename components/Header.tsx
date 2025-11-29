@@ -1,5 +1,4 @@
 import React from 'react';
-import { AdhocLogo } from './AdhocLogo';
 
 export const Header: React.FC = () => {
   return (
@@ -7,7 +6,7 @@ export const Header: React.FC = () => {
       <div className="max-w-4xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3">
           {/* Adhoc Logo */}
-          <AdhocLogo className="w-10 h-10" />
+          <img src="/adhoc-logo.png" alt="Adhoc Learning" className="h-10" />
           <div>
             <h1 className="font-serif text-2xl text-adhoc-violet font-bold tracking-tight">Adhoc Learning</h1>
             <p className="font-sans text-xs text-gray-500 tracking-wide uppercase">Soluciones Tecnológicas</p>
