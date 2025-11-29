@@ -10,33 +10,32 @@ export const AdhocLogo: React.FC<AdhocLogoProps> = ({ size = 40, className = '' 
     <svg 
       width={size} 
       height={size} 
-      viewBox="0 0 100 100" 
+      viewBox="0 0 512 512" 
       fill="none" 
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      {/* Triángulo exterior - Adhoc Violet */}
+      {/* Logo oficial de Adhoc - Círculo exterior */}
+      <circle cx="256" cy="256" r="256" fill="#7C6CD8"/>
+      
+      {/* Triángulo/Nave principal - blanco */}
       <path 
-        d="M50 10 L90 85 L10 85 Z" 
-        fill="#7C6CD8"
+        d="M256 100 L380 380 L132 380 Z" 
+        fill="white"
       />
-      {/* Triángulo interior - más claro */}
+      
+      {/* Triángulo interior - Lavender */}
       <path 
-        d="M50 25 L75 75 L25 75 Z" 
+        d="M256 160 L340 340 L172 340 Z" 
         fill="#BCAFEF"
       />
-      {/* Letra A en el centro */}
-      <text 
-        x="50" 
-        y="70" 
-        fontSize="40" 
-        fontWeight="bold" 
-        fill="white" 
-        textAnchor="middle" 
-        fontFamily="system-ui, -apple-system, sans-serif"
-      >
-        A
-      </text>
+      
+      {/* Letra A estilizada en el centro */}
+      <path 
+        d="M256 200 L310 320 H280 L256 270 L232 320 H202 Z" 
+        fill="white"
+      />
+      <rect x="240" y="280" width="32" height="15" fill="white"/>
     </svg>
   );
 };
