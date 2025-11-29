@@ -9,7 +9,7 @@ export const Header: React.FC = () => {
           {/* Logo oficial de Adhoc */}
           <AdhocLogo size={48} />
           <div>
-            <h1 className="font-sans text-2xl text-gray-900 font-bold tracking-tight">Adhoc <span className="text-adhoc-violet">Learning</span></h1>
+            <h1 className="font-display text-2xl text-gray-900 font-bold tracking-tight">Adhoc <span className="text-adhoc-violet">Learning</span></h1>
             <p className="font-sans text-xs text-gray-500 tracking-wide uppercase">Soluciones Tecnológicas</p>
           </div>
         </div>

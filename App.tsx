@@ -41,7 +41,7 @@ const App: React.FC = () => {
         {/* Hero / Intro Text - Only show when no story is displayed */}
         {!story && (
           <div className="text-center mb-10 max-w-2xl mx-auto">
-            <h2 className="font-sans text-4xl text-gray-900 mb-4 font-semibold tracking-tight">
+            <h2 className="font-display text-4xl text-gray-900 mb-4 font-semibold tracking-tight">
               Aprender es una <span className="text-adhoc-coral font-bold">aventura</span>
             </h2>
             <p className="font-sans text-lg text-gray-600">
