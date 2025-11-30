@@ -33,10 +33,20 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F9FAFB]">
+    <div className="min-h-screen flex flex-col bg-[#F9FAFB] relative">
       <Header />
 
-      <main className="flex-grow w-full max-w-4xl mx-auto px-4 py-8 md:py-12">
+      <main className="flex-grow w-full max-w-4xl mx-auto px-4 py-8 md:py-12 relative">
+        {/* Watermark - only visible on landing */}
+        {!story && (
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none opacity-5 overflow-hidden">
+            <img 
+              src="/smiley-watermark.png" 
+              alt="" 
+              className="w-80 h-80 object-contain"
+            />
+          </div>
+        )}
         
         {/* Hero / Intro Text - Only show when no story is displayed */}
         {!story && (
