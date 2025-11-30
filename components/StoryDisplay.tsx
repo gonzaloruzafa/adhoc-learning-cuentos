@@ -223,11 +223,11 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset, onLi
           <button
             onClick={() => {
               const shareUrl = `${window.location.origin}/cuento/${storyLogId}`;
-              let text = `¡Mirá este cuento que creé con Adhoc Learning! 📚✨\n\n"${story.title}"\n`;
+              let text = `¡Mirá este cuento que creé con Adhoc Learning! 📚✨\n\n`;
               if (concept && interest) {
-                text += `\nAprendé sobre ${concept} con la temática de ${interest}\n`;
+                text += `Aprendé sobre ${concept} con la temática de ${interest}\n\n`;
               }
-              text += `\nLeelo acá:`;
+              text += `"${story.title}"\n\nLeelo acá:`;
               const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text + ' ' + shareUrl)}`;
               window.open(whatsappUrl, '_blank');
             }}
