@@ -8,6 +8,8 @@ interface StoryDisplayProps {
   onListenStart?: () => void;
   storyLogId?: string;
   onNewStory?: () => void;
+  concept?: string;
+  interest?: string;
 }
 
 // Helper to decode base64 to Uint8Array
@@ -21,7 +23,7 @@ function decodeBase64(base64: string) {
   return bytes;
 }
 
-export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset, onListenStart, storyLogId, onNewStory }) => {
+export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset, onListenStart, storyLogId, onNewStory, concept, interest }) => {
   const [isAudioLoading, setIsAudioLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showCopied, setShowCopied] = useState(false);
@@ -221,7 +223,11 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset, onLi
           <button
             onClick={() => {
               const shareUrl = `${window.location.origin}/cuento/${storyLogId}`;
-              const text = `¡Mirá este cuento que creé con Adhoc Learning! 📚✨\n\n"${story.title}"\n\nLeelo acá:`;
+              let text = `¡Mirá este cuento que creé con Adhoc Learning! 📚✨\n\n"${story.title}"\n`;
+              if (concept && interest) {
+                text += `\nAprendé sobre ${concept} con la temática de ${interest}\n`;
+              }
+              text += `\nLeelo acá:`;
               const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text + ' ' + shareUrl)}`;
               window.open(whatsappUrl, '_blank');
             }}
@@ -269,7 +275,7 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset, onLi
         
         <button
           onClick={onReset || onNewStory}
-          className="px-6 py-3 rounded-lg border-2 border-adhoc-violet text-adhoc-violet font-sans font-medium hover:bg-adhoc-violet hover:text-white transition-colors"
+          className="px-6 py-3 rounded-lg bg-white border-2 border-adhoc-violet text-adhoc-violet font-sans font-medium hover:bg-adhoc-violet hover:text-white transition-colors shadow-sm"
         >
           Crear otro cuento
         </button>

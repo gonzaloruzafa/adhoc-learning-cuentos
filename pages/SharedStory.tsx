@@ -9,6 +9,8 @@ export const SharedStory: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [story, setStory] = useState<StoryResponse | null>(null);
+  const [concept, setConcept] = useState<string>('');
+  const [interest, setInterest] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,6 +37,8 @@ export const SharedStory: React.FC = () => {
             ? JSON.parse(data.story_content) 
             : data.story_content;
           setStory(storyContent as StoryResponse);
+          setConcept(data.concept || '');
+          setInterest(data.interests || '');
         } else {
           setError('Cuento no encontrado');
         }
@@ -118,6 +122,8 @@ export const SharedStory: React.FC = () => {
           storyLogId={id!}
           onNewStory={() => navigate('/')}
           onListenStart={handleListenStart}
+          concept={concept}
+          interest={interest}
         />
       </div>
     </div>

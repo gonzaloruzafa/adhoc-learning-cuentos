@@ -117,6 +117,8 @@ const App: React.FC = () => {
             onReset={handleReset} 
             onListenStart={handleListenStart}
             storyLogId={storyLogId || undefined}
+            concept={storyRequest?.concept}
+            interest={storyRequest?.interest}
           />
         )}
 
