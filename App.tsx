@@ -27,7 +27,7 @@ const App: React.FC = () => {
       // Log to Supabase
       const logResult = await logStoryGeneration({
         concept: data.concept,
-        interests: data.interests,
+        interests: data.interest,
         story_content: JSON.stringify(generatedStory),
         listened: false
       });

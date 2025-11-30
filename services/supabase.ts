@@ -3,6 +3,11 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+console.log('Supabase Config:', { 
+  url: supabaseUrl, 
+  keyExists: !!supabaseKey 
+});
+
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
 export interface StoryLog {
@@ -16,6 +21,7 @@ export interface StoryLog {
 
 export const logStoryGeneration = async (data: Omit<StoryLog, 'id' | 'created_at'>) => {
   try {
+    console.log('Attempting to log story:', data);
     const { data: result, error } = await supabase
       .from('story_logs')
       .insert([data])
@@ -27,6 +33,7 @@ export const logStoryGeneration = async (data: Omit<StoryLog, 'id' | 'created_at
       return null;
     }
     
+    console.log('Story logged successfully:', result);
     return result;
   } catch (err) {
     console.error('Error logging story:', err);
