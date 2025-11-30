@@ -112,7 +112,12 @@ const App: React.FC = () => {
 
         {/* Success / Story Display */}
         {story && (
-          <StoryDisplay story={story} onReset={handleReset} onListenStart={handleListenStart} />
+          <StoryDisplay 
+            story={story} 
+            onReset={handleReset} 
+            onListenStart={handleListenStart}
+            storyLogId={storyLogId || undefined}
+          />
         )}
 
       </main>

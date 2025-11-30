@@ -1,6 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import App from './App';
+import { SharedStory } from './pages/SharedStory';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -10,6 +12,11 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <App />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<App />} />
+        <Route path="/cuento/:id" element={<SharedStory />} />
+      </Routes>
+    </BrowserRouter>
   </React.StrictMode>
 );
