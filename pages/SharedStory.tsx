@@ -30,7 +30,11 @@ export const SharedStory: React.FC = () => {
         if (error) throw error;
 
         if (data) {
-          setStory(data.story_content as StoryResponse);
+          // Parse story_content from JSON string to object
+          const storyContent = typeof data.story_content === 'string' 
+            ? JSON.parse(data.story_content) 
+            : data.story_content;
+          setStory(storyContent as StoryResponse);
         } else {
           setError('Cuento no encontrado');
         }
