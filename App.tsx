@@ -4,21 +4,37 @@ import { InputSection } from './components/InputSection';
 import { StoryDisplay } from './components/StoryDisplay';
 import { StoryRequest, StoryResponse, LoadingState } from './types';
 import { generateEducationalStory } from './services/gemini';
+import { logStoryGeneration, updateListenStatus } from './services/supabase';
 
 const App: React.FC = () => {
   const [loadingState, setLoadingState] = useState<LoadingState>(LoadingState.IDLE);
   const [story, setStory] = useState<StoryResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [storyLogId, setStoryLogId] = useState<string | null>(null);
+  const [storyRequest, setStoryRequest] = useState<StoryRequest | null>(null);
 
   const handleStoryGeneration = async (data: StoryRequest) => {
     setLoadingState(LoadingState.LOADING);
     setError(null);
     setStory(null);
+    setStoryRequest(data);
 
     try {
       const generatedStory = await generateEducationalStory(data);
       setStory(generatedStory);
       setLoadingState(LoadingState.SUCCESS);
+
+      // Log to Supabase
+      const logResult = await logStoryGeneration({
+        concept: data.concept,
+        interests: data.interests,
+        story_content: JSON.stringify(generatedStory),
+        listened: false
+      });
+
+      if (logResult?.id) {
+        setStoryLogId(logResult.id);
+      }
     } catch (err) {
       console.error(err);
       setError("Lo sentimos, hubo un problema al crear tu historia. Por favor revisá tu conexión o intentá nuevamente.");
@@ -26,10 +42,18 @@ const App: React.FC = () => {
     }
   };
 
+  const handleListenStart = () => {
+    if (storyLogId) {
+      updateListenStatus(storyLogId, true);
+    }
+  };
+
   const handleReset = () => {
     setStory(null);
     setLoadingState(LoadingState.IDLE);
     setError(null);
+    setStoryLogId(null);
+    setStoryRequest(null);
   };
 
   return (
@@ -88,7 +112,7 @@ const App: React.FC = () => {
 
         {/* Success / Story Display */}
         {story && (
-          <StoryDisplay story={story} onReset={handleReset} />
+          <StoryDisplay story={story} onReset={handleReset} onListenStart={handleListenStart} />
         )}
 
       </main>

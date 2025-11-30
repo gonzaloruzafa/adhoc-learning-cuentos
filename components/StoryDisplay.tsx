@@ -5,6 +5,7 @@ import { generateStoryAudio } from '../services/gemini';
 interface StoryDisplayProps {
   story: StoryResponse;
   onReset: () => void;
+  onListenStart?: () => void;
 }
 
 // Helper to decode base64 to Uint8Array
@@ -18,12 +19,13 @@ function decodeBase64(base64: string) {
   return bytes;
 }
 
-export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset }) => {
+export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset, onListenStart }) => {
   const [isAudioLoading, setIsAudioLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioSourceRef = useRef<AudioBufferSourceNode | null>(null);
   const audioBufferRef = useRef<AudioBuffer | null>(null);
+  const hasCalledListenStart = useRef(false);
 
   // Cleanup audio on unmount
   useEffect(() => {
@@ -48,6 +50,12 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset }) =>
       return;
     }
 
+    // Call onListenStart only once
+    if (!hasCalledListenStart.current && onListenStart) {
+      onListenStart();
+      hasCalledListenStart.current = true;
+    }
+
     // Initialize AudioContext if needed
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
@@ -65,13 +73,6 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset }) =>
         }
 
         const audioData = decodeBase64(base64Audio);
-        // Decode the PCM data
-        // Note: The API returns raw PCM. We need to decode it. 
-        // We use the helper logic adapted for the browser's decodeAudioData which expects a full file structure or 
-        // we can construct the buffer manually if we know the format (PCM 16-bit 24kHz usually).
-        // However, the example uses decodeAudioData on the raw bytes if they are formatted, OR creates a buffer manually.
-        // The system prompt example manually creates the buffer from Int16Array. Let's do that for safety.
-        
         const dataInt16 = new Int16Array(audioData.buffer);
         const numChannels = 1;
         const sampleRate = 24000;
@@ -148,7 +149,7 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset }) =>
             ) : (
               <>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                   <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.414z" clipRule="evenodd" />
+                  <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
                 <span>Escuchar (Arg)</span>
               </>
@@ -163,11 +164,11 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset }) =>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {story.images.map((img, index) => (
                 <div key={index} className="group relative aspect-square rounded-xl overflow-hidden shadow-md border-2 border-adhoc-lavender bg-gray-100">
-                   <img 
+                  <img 
                     src={img} 
                     alt={`Ilustración del cuento ${index + 1}`} 
                     className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-110"
-                   />
+                  />
                    <div className="absolute inset-0 bg-gradient-to-t from-adhoc-violet/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
               ))}
