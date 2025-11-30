@@ -21,7 +21,7 @@ const App: React.FC = () => {
       setLoadingState(LoadingState.SUCCESS);
     } catch (err) {
       console.error(err);
-      setError("Lo sentimos, hubo un problema al crear tu historia. Por favor revisa tu conexión o intenta nuevamente.");
+      setError("Lo sentimos, hubo un problema al crear tu historia. Por favor revisá tu conexión o intentá nuevamente.");
       setLoadingState(LoadingState.ERROR);
     }
   };
@@ -41,7 +41,7 @@ const App: React.FC = () => {
         {/* Hero / Intro Text - Only show when no story is displayed */}
         {!story && (
           <div className="text-center mb-10 max-w-2xl mx-auto">
-            <h2 className="font-serif text-4xl text-gray-900 mb-4 font-medium">
+            <h2 className="font-display text-4xl text-gray-900 mb-4 font-normal">
               Aprender es una <span className="text-adhoc-coral">aventura</span>
             </h2>
             <p className="font-sans text-lg text-gray-500">
@@ -85,7 +85,17 @@ const App: React.FC = () => {
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 py-6 mt-auto">
-        <div className="max-w-4xl mx-auto px-4 text-center">
+        <div className="max-w-4xl mx-auto px-4 text-center space-y-2">
+          <p className="font-sans text-sm text-gray-500">
+            <a 
+              href="https://www.adhoc.inc" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-adhoc-violet hover:text-adhoc-coral transition-colors font-medium"
+            >
+              Conocé más sobre la tecnología de Adhoc →
+            </a>
+          </p>
           <p className="font-sans text-sm text-gray-400">
             © {new Date().getFullYear()} Adhoc S.A. - Soluciones Tecnológicas. Todos los derechos reservados.
           </p>

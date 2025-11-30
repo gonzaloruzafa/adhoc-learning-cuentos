@@ -20,11 +20,11 @@ export const InputSection: React.FC<InputSectionProps> = ({ onSubmit, isLoading 
   return (
     <section className="bg-white rounded-2xl shadow-lg border border-adhoc-lavender p-6 md:p-8 mb-8">
       <div className="mb-6">
-        <h2 className="font-serif text-2xl md:text-3xl text-adhoc-violet mb-2">
-          ¿Qué quieres aprender hoy?
+        <h2 className="font-display text-2xl md:text-3xl text-adhoc-violet mb-2">
+          ¿Qué querés aprender hoy?
         </h2>
         <p className="font-sans text-gray-600">
-          Cuéntanos un tema difícil y algo que te apasione. Nosotros haremos la magia.
+          Contanos un tema difícil y algo que te apasione. Nosotros hacemos la magia.
         </p>
       </div>
 

@@ -99,7 +99,7 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset }) =>
 
     } catch (error) {
       console.error("Error playing audio:", error);
-      alert("No se pudo reproducir el audio. Por favor intenta de nuevo.");
+      alert("No se pudo reproducir el audio. Por favor intentá de nuevo.");
     } finally {
       setIsAudioLoading(false);
     }
@@ -111,7 +111,7 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset }) =>
         {/* Story Header */}
         <div className="bg-adhoc-lavender/20 p-6 md:p-8 border-b border-gray-100 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div className="flex-1">
-            <h2 className="font-serif text-3xl md:text-4xl text-adhoc-violet font-bold mb-3 leading-tight">
+            <h2 className="font-display text-3xl md:text-4xl text-adhoc-violet font-bold mb-3 leading-tight">
               {story.title}
             </h2>
             <div className="flex items-center gap-2">
@@ -189,7 +189,7 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset }) =>
               </svg>
             </div>
             <div>
-              <h3 className="font-serif text-lg font-bold text-adhoc-mustard mb-1">Lo que aprendimos hoy</h3>
+              <h3 className="font-display text-lg font-bold text-adhoc-mustard mb-1">Lo que aprendimos hoy</h3>
               <p className="font-sans text-gray-800 italic">
                 {story.moralOrFact}
               </p>
