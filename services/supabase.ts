@@ -22,6 +22,23 @@ export interface StoryLog {
 export const logStoryGeneration = async (data: Omit<StoryLog, 'id' | 'created_at'>) => {
   try {
     console.log('Attempting to log story:', data);
+    console.log('Supabase client status:', supabase ? 'initialized' : 'not initialized');
+    console.log('Full supabase URL being used:', supabaseUrl);
+    
+    // Test if we can even reach Supabase
+    try {
+      const testFetch = await fetch(`${supabaseUrl}/rest/v1/`, {
+        method: 'HEAD',
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`
+        }
+      });
+      console.log('Direct fetch test status:', testFetch.status, testFetch.statusText);
+    } catch (fetchErr) {
+      console.error('Direct fetch test failed:', fetchErr);
+    }
+    
     const { data: result, error } = await supabase
       .from('story_logs')
       .insert([data])
@@ -29,14 +46,19 @@ export const logStoryGeneration = async (data: Omit<StoryLog, 'id' | 'created_at
       .single();
     
     if (error) {
-      console.error('Error logging story:', error);
+      console.error('Supabase error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       return null;
     }
     
     console.log('Story logged successfully:', result);
     return result;
   } catch (err) {
-    console.error('Error logging story:', err);
+    console.error('Exception logging story:', err);
     return null;
   }
 };
