@@ -196,6 +196,7 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset, onLi
     } catch (error) {
       console.error("Error playing audio:", error);
       alert("No se pudo reproducir el audio. Por favor intentá de nuevo.");
+      setLoadingProgress(0);
     } finally {
       setIsAudioLoading(false);
     }
@@ -253,10 +254,10 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset, onLi
           </button>
           
           {/* Progress Bar */}
-          {isAudioLoading && (
-            <div className="w-full md:w-48 bg-gray-200 rounded-full h-2 overflow-hidden">
+          {isAudioLoading && loadingProgress > 0 && (
+            <div className="w-full md:w-48 bg-gray-200 rounded-full h-2.5 overflow-hidden shadow-inner">
               <div 
-                className="bg-adhoc-violet h-full transition-all duration-300 ease-out rounded-full"
+                className="bg-adhoc-violet h-full transition-all duration-200 ease-out rounded-full"
                 style={{ width: `${loadingProgress}%` }}
               ></div>
             </div>
