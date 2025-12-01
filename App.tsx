@@ -51,10 +51,14 @@ const App: React.FC = () => {
       // Now show the story with the ID already set
       setStory(generatedStory);
       setLoadingState(LoadingState.SUCCESS);
-    } catch (err) {
+    } catch (err: any) {
       clearInterval(progressInterval);
       console.error(err);
-      setError("Lo sentimos, hubo un problema al crear tu historia. Por favor revisá tu conexión o intentá nuevamente.");
+      // Show specific error message if it's a safety block
+      const errorMessage = err?.message?.includes('seguridad') 
+        ? err.message 
+        : "Lo sentimos, hubo un problema al crear tu historia. Por favor revisá tu conexión o intentá nuevamente.";
+      setError(errorMessage);
       setLoadingState(LoadingState.ERROR);
       setLoadingProgress(0);
     }

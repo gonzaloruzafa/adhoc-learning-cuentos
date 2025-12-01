@@ -20,7 +20,14 @@ export const generateEducationalStory = async (request: StoryRequest): Promise<S
 
   // 1. Generate Story Text and Image Prompts
   const textPrompt = `
-    Actúa como un profesor experto y cuentacuentos creativo.
+    Actúa como un profesor experto y cuentacuentos creativo responsable.
+    
+    IMPORTANTE - POLÍTICAS DE SEGURIDAD:
+    - NO generes contenido sobre violencia, armas, explosivos, o actividades peligrosas
+    - NO generes contenido sexual explícito o inapropiado para menores
+    - NO generes contenido que promueva odio, discriminación o acoso
+    - Si el tema solicitado viola estas políticas, RECHAZALO y responde con un JSON vacío con solo el campo "error": "Contenido no permitido por razones de seguridad"
+    
     El objetivo es explicar el siguiente CONCEPTO ACADÉMICO: "${request.concept}".
     Debes explicarlo integrándolo en una historia basada en el siguiente INTERÉS DEL ALUMNO: "${request.interest}".
     
@@ -29,14 +36,21 @@ export const generateEducationalStory = async (request: StoryRequest): Promise<S
     2. La explicación del concepto debe ser precisa y didáctica, entretejida en la trama.
     3. El tono debe ser inspirador y adecuado para un estudiante.
     4. IMPORTANTE: Escribe el cuento en ESPAÑOL ARGENTINO (Rioplatense). Usa "vos" y conjugaciones locales. Usá expresiones coloquiales con moderación (evitá repetir "che" o "quilombo" en exceso). Mantené un tono amigable y natural apto para niños.
-    5. Genera EXACTAMENTE 3 descripciones visuales detalladas (prompts) para generar imágenes que ilustren momentos clave de la historia.
-    6. Devuelve el resultado en JSON.
+    5. El cuento debe tener un MÍNIMO de 400 palabras para ser completo y bien desarrollado. Incluí introducción, desarrollo y conclusión detallados.
+    6. Genera EXACTAMENTE 3 descripciones visuales detalladas (prompts) para generar imágenes que ilustren momentos clave de la historia.
+    7. Devuelve el resultado en JSON.
   `;
 
   try {
     const textResponse = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: textPrompt,
+      safetySettings: [
+        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_LOW_AND_ABOVE" },
+        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+      ],
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -65,9 +79,11 @@ export const generateEducationalStory = async (request: StoryRequest): Promise<S
       },
     });
 
-    const textData = JSON.parse(textResponse.text || '{}') as StoryTextResponse;
-    if (!textData.content) {
-      throw new Error("No story content generated.");
+    const textData = JSON.parse(textResponse.text || '{}') as StoryTextResponse & { error?: string };
+    
+    // Check if the model rejected the content
+    if (textData.error || !textData.content) {
+      throw new Error('Lo sentimos, no podemos generar este contenido por razones de seguridad. Por favor, intentá con otro tema.');
     }
 
     // 2. Generate Images using Nano Banana (gemini-2.5-flash-image)
@@ -84,7 +100,14 @@ export const generateEducationalStory = async (request: StoryRequest): Promise<S
           contents: {
             parts: [{ text: enhancedPrompt }]
           },
-          // Note: Nano banana models do not support responseMimeType or responseSchema
+          safetySettings: [
+            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_LOW_AND_ABOVE" },
+            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+          ],
+          config: {
+          }
         });
 
         for (const part of imageResponse.candidates?.[0]?.content?.parts || []) {
@@ -108,8 +131,12 @@ export const generateEducationalStory = async (request: StoryRequest): Promise<S
       images: generatedImages
     };
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating story:", error);
+    // Check if it's a safety filter block
+    if (error?.message?.includes('SAFETY') || error?.statusText?.includes('SAFETY') || error?.status === 400) {
+      throw new Error('Lo sentimos, no podemos generar este contenido por razones de seguridad. Por favor, intentá con otro tema.');
+    }
     throw error;
   }
 };
