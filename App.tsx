@@ -34,10 +34,8 @@ const App: React.FC = () => {
       const generatedStory = await generateEducationalStory(data);
       clearInterval(progressInterval);
       setLoadingProgress(100);
-      setStory(generatedStory);
-      setLoadingState(LoadingState.SUCCESS);
 
-      // Log to Supabase
+      // Log to Supabase FIRST to get the ID
       const logResult = await logStoryGeneration({
         concept: data.concept,
         interests: data.interest,
@@ -45,9 +43,14 @@ const App: React.FC = () => {
         listened: false
       });
 
+      // Set ID before showing the story
       if (logResult?.id) {
         setStoryLogId(logResult.id);
       }
+      
+      // Now show the story with the ID already set
+      setStory(generatedStory);
+      setLoadingState(LoadingState.SUCCESS);
     } catch (err) {
       clearInterval(progressInterval);
       console.error(err);
