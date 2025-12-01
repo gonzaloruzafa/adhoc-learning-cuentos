@@ -7,7 +7,7 @@ export const Header: React.FC = () => {
       <div className="max-w-4xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3">
           {/* Adhoc Logo */}
-          <a href="https://adhoc.inc" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
+          <a href="https://www.adhoc.inc" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
             <img src="/adhoc-logo.png" alt="Adhoc Learning" className="h-10 w-auto" />
           </a>
         </div>
