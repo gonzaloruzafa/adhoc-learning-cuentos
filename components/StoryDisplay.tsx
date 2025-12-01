@@ -25,6 +25,7 @@ function decodeBase64(base64: string) {
 
 export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset, onListenStart, storyLogId, onNewStory, concept, interest }) => {
   const [isAudioLoading, setIsAudioLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showCopied, setShowCopied] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -76,6 +77,7 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset, onLi
 
     try {
       setIsAudioLoading(true);
+      setLoadingProgress(0);
 
       // Initialize AudioContext if needed (iOS requires this after user interaction)
       if (!audioContextRef.current) {
@@ -89,26 +91,45 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset, onLi
 
       // Fetch audio if we haven't already
       if (!audioBufferRef.current) {
-        const base64Audio = await generateStoryAudio(story.content);
+        setLoadingProgress(10);
         
-        if (!base64Audio) {
-          throw new Error("Failed to generate audio");
-        }
+        // Simulate progress while generating (takes ~5-15 seconds)
+        const progressInterval = setInterval(() => {
+          setLoadingProgress(prev => {
+            if (prev >= 90) return prev;
+            return prev + 5;
+          });
+        }, 500);
 
-        const audioData = decodeBase64(base64Audio);
-        const dataInt16 = new Int16Array(audioData.buffer);
-        const numChannels = 1;
-        const sampleRate = 24000;
-        const frameCount = dataInt16.length / numChannels;
-        
-        const buffer = audioContextRef.current.createBuffer(numChannels, frameCount, sampleRate);
-        const channelData = buffer.getChannelData(0);
-        
-        for (let i = 0; i < frameCount; i++) {
-          channelData[i] = dataInt16[i] / 32768.0;
+        try {
+          const base64Audio = await generateStoryAudio(story.content);
+          clearInterval(progressInterval);
+          
+          if (!base64Audio) {
+            throw new Error("Failed to generate audio");
+          }
+
+          setLoadingProgress(95);
+          
+          const audioData = decodeBase64(base64Audio);
+          const dataInt16 = new Int16Array(audioData.buffer);
+          const numChannels = 1;
+          const sampleRate = 24000;
+          const frameCount = dataInt16.length / numChannels;
+          
+          const buffer = audioContextRef.current.createBuffer(numChannels, frameCount, sampleRate);
+          const channelData = buffer.getChannelData(0);
+          
+          for (let i = 0; i < frameCount; i++) {
+            channelData[i] = dataInt16[i] / 32768.0;
+          }
+          
+          audioBufferRef.current = buffer;
+          setLoadingProgress(100);
+        } catch (error) {
+          clearInterval(progressInterval);
+          throw error;
         }
-        
-        audioBufferRef.current = buffer;
       }
 
       // Ensure context is running before playing
@@ -153,24 +174,25 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset, onLi
           </div>
           
           {/* Audio Button */}
-          <button 
-            onClick={handlePlayAudio}
-            disabled={isAudioLoading}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-sans font-medium text-sm transition-all shadow-sm flex-shrink-0
-              ${isPlaying 
-                ? 'bg-red-100 text-red-600 border border-red-200 hover:bg-red-200' 
-                : 'bg-white text-adhoc-violet border border-adhoc-violet hover:bg-adhoc-violet hover:text-white'
-              } ${isAudioLoading ? 'opacity-70 cursor-wait' : ''}`}
-          >
-            {isAudioLoading ? (
-              <>
-                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span>Generando Audio...</span>
-              </>
-            ) : isPlaying ? (
+          <div className="flex flex-col gap-2 flex-shrink-0">
+            <button 
+              onClick={handlePlayAudio}
+              disabled={isAudioLoading}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-sans font-medium text-sm transition-all shadow-sm
+                ${isPlaying 
+                  ? 'bg-red-100 text-red-600 border border-red-200 hover:bg-red-200' 
+                  : 'bg-white text-adhoc-violet border border-adhoc-violet hover:bg-adhoc-violet hover:text-white'
+                } ${isAudioLoading ? 'opacity-70 cursor-wait' : ''}`}
+            >
+              {isAudioLoading ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Generando {loadingProgress}%</span>
+                </>
+              ) : isPlaying ? (
               <>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
@@ -186,6 +208,17 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset, onLi
               </>
             )}
           </button>
+          
+          {/* Progress Bar */}
+          {isAudioLoading && (
+            <div className="w-full md:w-48 bg-gray-200 rounded-full h-2 overflow-hidden">
+              <div 
+                className="bg-adhoc-violet h-full transition-all duration-300 ease-out rounded-full"
+                style={{ width: `${loadingProgress}%` }}
+              ></div>
+            </div>
+          )}
+        </div>
         </div>
 
         <div className="p-6 md:p-10 space-y-8">
