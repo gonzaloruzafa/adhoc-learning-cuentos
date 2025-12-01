@@ -74,13 +74,18 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset, onLi
       hasCalledListenStart.current = true;
     }
 
-    // Initialize AudioContext if needed
-    if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
-    }
-
     try {
       setIsAudioLoading(true);
+
+      // Initialize AudioContext if needed (iOS requires this after user interaction)
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+      }
+
+      // iOS requires resuming the context
+      if (audioContextRef.current.state === 'suspended') {
+        await audioContextRef.current.resume();
+      }
 
       // Fetch audio if we haven't already
       if (!audioBufferRef.current) {
@@ -106,12 +111,20 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset, onLi
         audioBufferRef.current = buffer;
       }
 
+      // Ensure context is running before playing
+      if (audioContextRef.current.state !== 'running') {
+        await audioContextRef.current.resume();
+      }
+
       // Play
       const source = audioContextRef.current.createBufferSource();
       source.buffer = audioBufferRef.current;
       source.connect(audioContextRef.current.destination);
       source.onended = () => setIsPlaying(false);
-      source.start();
+      
+      // Start with a slight delay to ensure iOS is ready
+      const startTime = audioContextRef.current.currentTime + 0.01;
+      source.start(startTime);
       
       audioSourceRef.current = source;
       setIsPlaying(true);
