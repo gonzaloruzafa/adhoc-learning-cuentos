@@ -93,10 +93,20 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset, onLi
       // Fetch audio if we haven't already
       if (!audioBufferRef.current) {
         let base64Audio: string | null = null;
+        let progressInterval: NodeJS.Timeout | null = null;
         
         // Try to load from database first
         if (storyLogId) {
           setLoadingProgress(10);
+          
+          // Start progress animation
+          progressInterval = setInterval(() => {
+            setLoadingProgress(prev => {
+              if (prev >= 80) return prev;
+              return prev + 10;
+            });
+          }, 200);
+          
           const { data } = await supabase
             .from('story_logs')
             .select('audio_data')
@@ -105,7 +115,10 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset, onLi
           
           if (data?.audio_data) {
             base64Audio = data.audio_data;
-            setLoadingProgress(90);
+            if (progressInterval) clearInterval(progressInterval);
+            setLoadingProgress(85);
+          } else if (progressInterval) {
+            clearInterval(progressInterval);
           }
         }
         
