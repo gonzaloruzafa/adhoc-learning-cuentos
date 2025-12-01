@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { Header } from '../components/Header';
 import { StoryDisplay } from '../components/StoryDisplay';
 import { supabase } from '../services/supabase';
@@ -105,27 +106,55 @@ export const SharedStory: React.FC = () => {
     }
   };
 
+  const shareUrl = `${window.location.origin}/cuento/${id}`;
+  const firstImage = story.images && story.images.length > 0 ? story.images[0] : '';
+  const description = concept && interest 
+    ? `Aprendé sobre ${concept} con la temática de ${interest}` 
+    : story.title;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-adhoc-violet via-adhoc-lavender to-adhoc-violet">
-      <Header />
-      <div className="container mx-auto px-4 py-12">
-        <div className="max-w-4xl mx-auto mb-6">
-          <button
-            onClick={() => navigate('/')}
-            className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg font-secondary text-sm transition-colors border border-white/30"
-          >
-            ← Crear otro cuento
-          </button>
+    <>
+      <Helmet>
+        <title>{story.title} - Adhoc Learning</title>
+        <meta name="description" content={description} />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={shareUrl} />
+        <meta property="og:title" content={story.title} />
+        <meta property="og:description" content={description} />
+        {firstImage && <meta property="og:image" content={firstImage} />}
+        <meta property="og:site_name" content="Adhoc Learning" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={shareUrl} />
+        <meta name="twitter:title" content={story.title} />
+        <meta name="twitter:description" content={description} />
+        {firstImage && <meta name="twitter:image" content={firstImage} />}
+      </Helmet>
+      
+      <div className="min-h-screen bg-gradient-to-br from-adhoc-violet via-adhoc-lavender to-adhoc-violet">
+        <Header />
+        <div className="container mx-auto px-4 py-12">
+          <div className="max-w-4xl mx-auto mb-6">
+            <button
+              onClick={() => navigate('/')}
+              className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg font-secondary text-sm transition-colors border border-white/30"
+            >
+              ← Crear otro cuento
+            </button>
+          </div>
+          <StoryDisplay 
+            story={story} 
+            storyLogId={id!}
+            onNewStory={() => navigate('/')}
+            onListenStart={handleListenStart}
+            concept={concept}
+            interest={interest}
+          />
         </div>
-        <StoryDisplay 
-          story={story} 
-          storyLogId={id!}
-          onNewStory={() => navigate('/')}
-          onListenStart={handleListenStart}
-          concept={concept}
-          interest={interest}
-        />
       </div>
-    </div>
+    </>
   );
 };
