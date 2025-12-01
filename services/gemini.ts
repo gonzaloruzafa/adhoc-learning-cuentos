@@ -28,7 +28,7 @@ export const generateEducationalStory = async (request: StoryRequest): Promise<S
     1. La historia debe ser emocionante y utilizar los tropos, personajes o ambiente del tema de interés.
     2. La explicación del concepto debe ser precisa y didáctica, entretejida en la trama.
     3. El tono debe ser inspirador y adecuado para un estudiante.
-    4. IMPORTANTE: Escribe el cuento en ESPAÑOL ARGENTINO (Rioplatense). Usa "vos", conjugaciones locales y expresiones coloquiales amigables (ej: "che", "re", etc) aptas para niños.
+    4. IMPORTANTE: Escribe el cuento en ESPAÑOL ARGENTINO (Rioplatense). Usa "vos" y conjugaciones locales. Usá expresiones coloquiales con moderación (evitá repetir "che" o "quilombo" en exceso). Mantené un tono amigable y natural apto para niños.
     5. Genera EXACTAMENTE 3 descripciones visuales detalladas (prompts) para generar imágenes que ilustren momentos clave de la historia.
     6. Devuelve el resultado en JSON.
   `;
