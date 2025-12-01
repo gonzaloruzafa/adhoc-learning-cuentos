@@ -8,6 +8,7 @@ import { logStoryGeneration, updateListenStatus } from './services/supabase';
 
 const App: React.FC = () => {
   const [loadingState, setLoadingState] = useState<LoadingState>(LoadingState.IDLE);
+  const [loadingProgress, setLoadingProgress] = useState(0);
   const [story, setStory] = useState<StoryResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [storyLogId, setStoryLogId] = useState<string | null>(null);
@@ -15,12 +16,24 @@ const App: React.FC = () => {
 
   const handleStoryGeneration = async (data: StoryRequest) => {
     setLoadingState(LoadingState.LOADING);
+    setLoadingProgress(0);
     setError(null);
     setStory(null);
     setStoryRequest(data);
 
+    // Simulate progress while generating (takes ~20-40 seconds)
+    const progressInterval = setInterval(() => {
+      setLoadingProgress(prev => {
+        if (prev >= 90) return prev;
+        return prev + 3;
+      });
+    }, 800);
+
     try {
+      setLoadingProgress(10);
       const generatedStory = await generateEducationalStory(data);
+      clearInterval(progressInterval);
+      setLoadingProgress(100);
       setStory(generatedStory);
       setLoadingState(LoadingState.SUCCESS);
 
@@ -36,9 +49,11 @@ const App: React.FC = () => {
         setStoryLogId(logResult.id);
       }
     } catch (err) {
+      clearInterval(progressInterval);
       console.error(err);
       setError("Lo sentimos, hubo un problema al crear tu historia. Por favor revisá tu conexión o intentá nuevamente.");
       setLoadingState(LoadingState.ERROR);
+      setLoadingProgress(0);
     }
   };
 
@@ -51,6 +66,7 @@ const App: React.FC = () => {
   const handleReset = () => {
     setStory(null);
     setLoadingState(LoadingState.IDLE);
+    setLoadingProgress(0);
     setError(null);
     setStoryLogId(null);
     setStoryRequest(null);
@@ -88,7 +104,8 @@ const App: React.FC = () => {
         {!story && (
           <InputSection 
             onSubmit={handleStoryGeneration} 
-            isLoading={loadingState === LoadingState.LOADING} 
+            isLoading={loadingState === LoadingState.LOADING}
+            loadingProgress={loadingProgress}
           />
         )}
 
