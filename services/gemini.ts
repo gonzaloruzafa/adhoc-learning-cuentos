@@ -143,19 +143,21 @@ export const generateShareMessage = async (concept: string, interest: string, ti
   if (!apiKey) throw new Error("API Key is missing.");
 
   const prompt = `
-    Creá un mensaje breve y atractivo para compartir en WhatsApp sobre un cuento educativo.
+    Creá un mensaje breve y directo para compartir en WhatsApp sobre un cuento educativo.
     
     El cuento enseña sobre: "${concept}"
     Y usa la temática de: "${interest}"
     El título del cuento es: "${title}"
     
     Requisitos:
-    - Máximo 2 líneas de texto
-    - Usa español argentino neutro y amigable
-    - Debe explicar de qué se trata de forma atractiva
-    - Hacelo sonar interesante para que quieran leerlo
+    - Debe explicar CLARAMENTE qué concepto educativo se enseña y con qué temática
+    - Formato: "Aprendé sobre [CONCEPTO] a través de [TEMÁTICA]"
+    - Máximo 1 línea concisa
+    - Usa español argentino neutro
     - NO uses comillas, asteriscos ni emojis
     - Devolvé SOLO el texto del mensaje, nada más
+    
+    Ejemplo: "Aprendé sobre cómo se extrae el petróleo a través de Bluey"
   `;
 
   try {
