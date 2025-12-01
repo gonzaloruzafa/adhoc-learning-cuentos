@@ -138,3 +138,36 @@ export const generateStoryAudio = async (text: string): Promise<string | null> =
     return null;
   }
 };
+
+export const generateShareMessage = async (concept: string, interest: string, title: string): Promise<string> => {
+  if (!apiKey) throw new Error("API Key is missing.");
+
+  const prompt = `
+    Creá un mensaje breve y atractivo para compartir en WhatsApp sobre un cuento educativo.
+    
+    El cuento enseña sobre: "${concept}"
+    Y usa la temática de: "${interest}"
+    El título del cuento es: "${title}"
+    
+    Requisitos:
+    - Máximo 2 líneas de texto
+    - Usa español argentino neutro y amigable
+    - Debe explicar de qué se trata de forma atractiva
+    - Hacelo sonar interesante para que quieran leerlo
+    - NO uses comillas, asteriscos ni emojis
+    - Devolvé SOLO el texto del mensaje, nada más
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+    });
+
+    const messageText = response.text?.trim() || `Aprendé sobre ${concept} con la temática de ${interest}`;
+    return messageText;
+  } catch (error) {
+    console.error("Error generating share message:", error);
+    return `Aprendé sobre ${concept} con la temática de ${interest}`;
+  }
+};
