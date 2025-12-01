@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { StoryResponse } from '../types';
 import { generateStoryAudio, generateShareMessage } from '../services/gemini';
+import { supabase, updateStoryAudio } from '../services/supabase';
 
 interface StoryDisplayProps {
   story: StoryResponse;
@@ -91,45 +92,74 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset, onLi
 
       // Fetch audio if we haven't already
       if (!audioBufferRef.current) {
-        setLoadingProgress(10);
+        let base64Audio: string | null = null;
         
-        // Simulate progress while generating (takes ~5-15 seconds)
-        const progressInterval = setInterval(() => {
-          setLoadingProgress(prev => {
-            if (prev >= 90) return prev;
-            return prev + 5;
-          });
-        }, 500);
-
-        try {
-          const base64Audio = await generateStoryAudio(story.content);
-          clearInterval(progressInterval);
+        // Try to load from database first
+        if (storyLogId) {
+          setLoadingProgress(10);
+          const { data } = await supabase
+            .from('story_logs')
+            .select('audio_data')
+            .eq('id', storyLogId)
+            .single();
           
-          if (!base64Audio) {
-            throw new Error("Failed to generate audio");
+          if (data?.audio_data) {
+            base64Audio = data.audio_data;
+            setLoadingProgress(90);
           }
-
-          setLoadingProgress(95);
-          
-          const audioData = decodeBase64(base64Audio);
-          const dataInt16 = new Int16Array(audioData.buffer);
-          const numChannels = 1;
-          const sampleRate = 24000;
-          const frameCount = dataInt16.length / numChannels;
-          
-          const buffer = audioContextRef.current.createBuffer(numChannels, frameCount, sampleRate);
-          const channelData = buffer.getChannelData(0);
-          
-          for (let i = 0; i < frameCount; i++) {
-            channelData[i] = dataInt16[i] / 32768.0;
-          }
-          
-          audioBufferRef.current = buffer;
-          setLoadingProgress(100);
-        } catch (error) {
-          clearInterval(progressInterval);
-          throw error;
         }
+        
+        // If not in database, generate it
+        if (!base64Audio) {
+          setLoadingProgress(20);
+          
+          // Simulate progress while generating (takes ~5-15 seconds)
+          const progressInterval = setInterval(() => {
+            setLoadingProgress(prev => {
+              if (prev >= 85) return prev;
+              return prev + 5;
+            });
+          }, 500);
+
+          try {
+            base64Audio = await generateStoryAudio(story.content);
+            clearInterval(progressInterval);
+            
+            if (!base64Audio) {
+              throw new Error("Failed to generate audio");
+            }
+
+            // Save to database for future use
+            if (storyLogId) {
+              await updateStoryAudio(storyLogId, base64Audio);
+            }
+          } catch (error) {
+            clearInterval(progressInterval);
+            throw error;
+          }
+        }
+
+        if (!base64Audio) {
+          throw new Error("No audio available");
+        }
+
+        setLoadingProgress(95);
+        
+        const audioData = decodeBase64(base64Audio);
+        const dataInt16 = new Int16Array(audioData.buffer);
+        const numChannels = 1;
+        const sampleRate = 24000;
+        const frameCount = dataInt16.length / numChannels;
+        
+        const buffer = audioContextRef.current.createBuffer(numChannels, frameCount, sampleRate);
+        const channelData = buffer.getChannelData(0);
+        
+        for (let i = 0; i < frameCount; i++) {
+          channelData[i] = dataInt16[i] / 32768.0;
+        }
+        
+        audioBufferRef.current = buffer;
+        setLoadingProgress(100);
       }
 
       // Ensure context is running before playing

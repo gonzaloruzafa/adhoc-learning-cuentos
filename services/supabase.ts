@@ -17,6 +17,7 @@ export interface StoryLog {
   interests: string;
   story_content: string;
   listened: boolean;
+  audio_data?: string | null;
 }
 
 export const logStoryGeneration = async (data: Omit<StoryLog, 'id' | 'created_at'>) => {
@@ -78,6 +79,25 @@ export const updateListenStatus = async (id: string, listened: boolean) => {
     return true;
   } catch (err) {
     console.error('Error updating listen status:', err);
+    return false;
+  }
+};
+
+export const updateStoryAudio = async (id: string, audioData: string) => {
+  try {
+    const { error } = await supabase
+      .from('story_logs')
+      .update({ audio_data: audioData })
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error updating audio data:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (err) {
+    console.error('Error updating audio data:', err);
     return false;
   }
 };
