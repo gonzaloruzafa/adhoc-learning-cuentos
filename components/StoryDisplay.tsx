@@ -144,7 +144,11 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset, onLi
 
             // Save to database for future use
             if (storyLogId) {
-              await updateStoryAudio(storyLogId, base64Audio);
+              console.log('Guardando audio en DB para story:', storyLogId);
+              const saved = await updateStoryAudio(storyLogId, base64Audio);
+              console.log('Audio guardado:', saved);
+            } else {
+              console.log('No hay storyLogId, no se guarda el audio');
             }
           } catch (error) {
             clearInterval(progressInterval);
