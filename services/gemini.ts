@@ -36,9 +36,10 @@ export const generateEducationalStory = async (request: StoryRequest): Promise<S
     2. La explicación del concepto debe ser precisa y didáctica, entretejida en la trama.
     3. El tono debe ser inspirador y adecuado para un estudiante.
     4. IMPORTANTE: Escribe el cuento en ESPAÑOL ARGENTINO (Rioplatense). Usa "vos" y conjugaciones locales. Usá expresiones coloquiales con moderación (evitá repetir "che" o "quilombo" en exceso). Mantené un tono amigable y natural apto para niños.
-    5. El cuento debe tener un MÍNIMO de 400 palabras para ser completo y bien desarrollado. Incluí introducción, desarrollo y conclusión detallados.
-    6. Genera EXACTAMENTE 3 descripciones visuales detalladas (prompts) para generar imágenes que ilustren momentos clave de la historia.
-    7. Devuelve el resultado en JSON.
+    5. CRÍTICO: El cuento debe tener un MÍNIMO ABSOLUTO de 500 palabras. Contá las palabras antes de responder. Si tenés menos de 500 palabras, agregá más desarrollo, diálogos y detalles hasta alcanzar el mínimo. NO entregues cuentos cortos bajo ninguna circunstancia.
+    6. Estructura obligatoria: Introducción (100+ palabras), Desarrollo con explicación del concepto (300+ palabras), Conclusión (100+ palabras).
+    7. Genera EXACTAMENTE 3 descripciones visuales detalladas (prompts) para generar imágenes que ilustren momentos clave de la historia.
+    8. Devuelve el resultado en JSON.
   `;
 
   try {
@@ -84,6 +85,13 @@ export const generateEducationalStory = async (request: StoryRequest): Promise<S
     // Check if the model rejected the content
     if (textData.error || !textData.content) {
       throw new Error('Lo sentimos, no podemos generar este contenido por razones de seguridad. Por favor, intentá con otro tema.');
+    }
+
+    // Validate minimum word count
+    const wordCount = textData.content.split(/\s+/).length;
+    if (wordCount < 300) {
+      console.warn(`Story too short: ${wordCount} words. Concept: ${request.concept}`);
+      throw new Error('El cuento generado es demasiado corto. Por favor, intentá con otro concepto o tema de interés.');
     }
 
     // 2. Generate Images using Nano Banana (gemini-2.5-flash-image)
