@@ -177,12 +177,12 @@ export default async function handler(
     }
 
     // Validar que se generaron los prompts de imagen
-    if (!storyData.imagePrompts || storyData.imagePrompts.length !== 3) {
+    if (!storyData.imagePrompts || storyData.imagePrompts.length === 0) {
       throw new Error("No se generaron los prompts de imagen correctamente");
     }
 
-    // Generar las 3 imágenes en paralelo
-    const imagePromises = storyData.imagePrompts.map(async (prompt: string) => {
+    // Generar solo 1 imagen (la primera) para reducir consumo de API
+    const imagePromises = storyData.imagePrompts.slice(0, 1).map(async (prompt: string) => {
       try {
         const enhancedPrompt = `${prompt}. Estilo ilustración digital moderna, colores vibrantes, amigable para niños, alta calidad.`;
         
