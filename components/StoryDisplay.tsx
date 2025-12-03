@@ -273,7 +273,7 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ story, onReset, onLi
           
           {/* Images Gallery */}
           {story.images && story.images.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className={`grid grid-cols-1 ${story.images.length > 1 ? 'md:grid-cols-3' : 'md:grid-cols-1 max-w-2xl mx-auto'} gap-6`}>
               {story.images.map((img, index) => (
                 <div key={index} className="group relative aspect-square rounded-xl overflow-hidden shadow-md border-2 border-adhoc-lavender bg-gray-100">
                   <img 
