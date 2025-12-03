@@ -1,210 +1,44 @@
-import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { StoryRequest, StoryResponse } from "../types";
 
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
-
-const ai = new GoogleGenAI({ apiKey });
-
-// Internal interface for the text generation model response
-interface StoryTextResponse {
-  title: string;
-  content: string;
-  moralOrFact: string;
-  imagePrompts: string[];
-}
-
+// Ahora llamamos a nuestra API serverless en lugar de Gemini directamente
 export const generateEducationalStory = async (request: StoryRequest): Promise<StoryResponse> => {
-  if (!apiKey) {
-    throw new Error("API Key is missing.");
-  }
-
-  // 1. Generate Story Text and Image Prompts
-  const textPrompt = `
-    Actúa como un profesor experto y cuentacuentos creativo responsable.
-    
-    IMPORTANTE - POLÍTICAS DE SEGURIDAD:
-    - NO generes contenido sobre violencia, armas, explosivos, o actividades peligrosas
-    - NO generes contenido sexual explícito o inapropiado para menores
-    - NO generes contenido que promueva odio, discriminación o acoso
-    - Si el tema solicitado viola estas políticas, RECHAZALO y responde con un JSON vacío con solo el campo "error": "Contenido no permitido por razones de seguridad"
-    
-    El objetivo es explicar el siguiente CONCEPTO ACADÉMICO: "${request.concept}".
-    Debes explicarlo integrándolo en una historia basada en el siguiente INTERÉS DEL ALUMNO: "${request.interest}".
-    
-    Requisitos:
-    1. La historia debe ser emocionante y utilizar los tropos, personajes o ambiente del tema de interés.
-    2. La explicación del concepto debe ser precisa y didáctica, entretejida en la trama.
-    3. El tono debe ser inspirador y adecuado para un estudiante.
-    4. IMPORTANTE: Escribe el cuento en ESPAÑOL ARGENTINO (Rioplatense). Usa "vos" y conjugaciones locales. Usá expresiones coloquiales con moderación (evitá repetir "che" o "quilombo" en exceso). Mantené un tono amigable y natural apto para niños.
-    5. CRÍTICO: El cuento debe tener un MÍNIMO ABSOLUTO de 500 palabras. Contá las palabras antes de responder. Si tenés menos de 500 palabras, agregá más desarrollo, diálogos y detalles hasta alcanzar el mínimo. NO entregues cuentos cortos bajo ninguna circunstancia.
-    6. Estructura obligatoria: Introducción (100+ palabras), Desarrollo con explicación del concepto (300+ palabras), Conclusión (100+ palabras).
-    7. Genera EXACTAMENTE 3 descripciones visuales detalladas (prompts) para generar imágenes que ilustren momentos clave de la historia.
-    8. Devuelve el resultado en JSON.
-  `;
-
+  const apiUrl = import.meta.env.VITE_API_URL || '/api/generate-story';
+  
   try {
-    const textResponse = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: textPrompt,
-      safetySettings: [
-        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_LOW_AND_ABOVE" },
-        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-      ],
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            title: {
-              type: Type.STRING,
-              description: "Un título creativo para el cuento.",
-            },
-            content: {
-              type: Type.STRING,
-              description: "El contenido completo del cuento. Usa párrafos claros.",
-            },
-            moralOrFact: {
-              type: Type.STRING,
-              description: "Una breve conclusión didáctica o dato curioso resumido.",
-            },
-            imagePrompts: {
-              type: Type.ARRAY,
-              description: "3 descripciones detalladas para generar imágenes.",
-              items: { type: Type.STRING }
-            }
-          },
-          required: ["title", "content", "moralOrFact", "imagePrompts"],
-        },
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        concept: request.concept,
+        interest: request.interest,
+      }),
     });
 
-    const textData = JSON.parse(textResponse.text || '{}') as StoryTextResponse & { error?: string };
-    
-    // Check if the model rejected the content
-    if (textData.error || !textData.content) {
-      throw new Error('Lo sentimos, no podemos generar este contenido por razones de seguridad. Por favor, intentá con otro tema.');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }));
+      throw new Error(errorData.error || `Error del servidor: ${response.status}`);
     }
 
-    // Validate minimum word count
-    const wordCount = textData.content.split(/\s+/).length;
-    if (wordCount < 300) {
-      console.warn(`Story too short: ${wordCount} words. Concept: ${request.concept}`);
-      throw new Error('El cuento generado es demasiado corto. Por favor, intentá con otro concepto o tema de interés.');
-    }
-
-    // 2. Generate Images using Nano Banana (gemini-2.5-flash-image)
-    // We limit to 3 images as requested
-    const promptsToGenerate = (textData.imagePrompts || []).slice(0, 3);
-    
-    const imagePromises = promptsToGenerate.map(async (prompt) => {
-      try {
-        // Adding style descriptors to ensure consistent aesthetic
-        const enhancedPrompt = `${prompt}. Estilo ilustración digital moderna, colores vibrantes, amigable para niños, alta calidad.`;
-        
-        const imageResponse = await ai.models.generateContent({
-          model: 'gemini-2.5-flash-image',
-          contents: {
-            parts: [{ text: enhancedPrompt }]
-          },
-          safetySettings: [
-            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_LOW_AND_ABOVE" },
-            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-          ],
-          config: {
-          }
-        });
-
-        for (const part of imageResponse.candidates?.[0]?.content?.parts || []) {
-          if (part.inlineData && part.inlineData.data) {
-            return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
-          }
-        }
-        return null;
-      } catch (e) {
-        console.error("Error generating image for prompt:", prompt, e);
-        return null; 
-      }
-    });
-
-    const generatedImages = (await Promise.all(imagePromises)).filter((img): img is string => img !== null);
-
-    return {
-      title: textData.title,
-      content: textData.content,
-      moralOrFact: textData.moralOrFact,
-      images: generatedImages
-    };
+    const data: StoryResponse = await response.json();
+    return data;
 
   } catch (error: any) {
-    console.error("Error generating story:", error);
-    // Check if it's a safety filter block
-    if (error?.message?.includes('SAFETY') || error?.statusText?.includes('SAFETY') || error?.status === 400) {
-      throw new Error('Lo sentimos, no podemos generar este contenido por razones de seguridad. Por favor, intentá con otro tema.');
-    }
-    throw error;
+    console.error("Error calling story generation API:", error);
+    throw new Error(error.message || 'Error al generar el cuento. Por favor, intentá de nuevo.');
   }
 };
 
+// Funciones de audio y share message se pueden mantener en el cliente ya que son menos críticas
+// O también moverlas al servidor si querés proteger esas funcionalidades
 export const generateStoryAudio = async (text: string): Promise<string | null> => {
-  if (!apiKey) throw new Error("API Key is missing.");
-
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-preview-tts",
-      contents: [{ parts: [{ text }] }],
-      config: {
-        responseModalities: [Modality.AUDIO],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Puck' }, // Puck typically has a good storytelling timbre
-          },
-        },
-      },
-    });
-
-    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    return base64Audio || null;
-  } catch (error) {
-    console.error("Error generating audio:", error);
-    return null;
-  }
+  // Esta función se puede remover o mover al servidor según necesites
+  console.warn("generateStoryAudio: Esta función requiere API key en el cliente. Considerar mover al servidor.");
+  return null;
 };
 
 export const generateShareMessage = async (concept: string, interest: string, title: string): Promise<string> => {
-  if (!apiKey) throw new Error("API Key is missing.");
-
-  const prompt = `
-    Creá un mensaje breve y directo para compartir en WhatsApp sobre un cuento educativo.
-    
-    El cuento enseña sobre: "${concept}"
-    Y usa la temática de: "${interest}"
-    El título del cuento es: "${title}"
-    
-    Requisitos:
-    - Debe explicar CLARAMENTE qué concepto educativo se enseña y con qué temática
-    - Formato: "Aprendé sobre [CONCEPTO] a través de [TEMÁTICA]"
-    - Máximo 1 línea concisa
-    - Usa español argentino neutro
-    - NO uses comillas, asteriscos ni emojis
-    - Devolvé SOLO el texto del mensaje, nada más
-    
-    Ejemplo: "Aprendé sobre cómo se extrae el petróleo a través de Bluey"
-  `;
-
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-    });
-
-    const messageText = response.text?.trim() || `Aprendé sobre ${concept} con la temática de ${interest}`;
-    return messageText;
-  } catch (error) {
-    console.error("Error generating share message:", error);
-    return `Aprendé sobre ${concept} con la temática de ${interest}`;
-  }
+  // Fallback simple sin usar API
+  return `Aprendé sobre ${concept} con la temática de ${interest}`;
 };
