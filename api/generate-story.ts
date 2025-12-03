@@ -139,12 +139,6 @@ export default async function handler(
     const textResponse = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: textPrompt,
-      safetySettings: [
-        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_LOW_AND_ABOVE" },
-        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-      ],
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -197,14 +191,7 @@ export default async function handler(
           model: 'gemini-2.5-flash-image',
           contents: {
             parts: [{ text: enhancedPrompt }]
-          },
-          safetySettings: [
-            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_LOW_AND_ABOVE" },
-            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-          ],
-          config: {}
+          }
         });
 
         for (const part of imageResponse.candidates?.[0]?.content?.parts || []) {
