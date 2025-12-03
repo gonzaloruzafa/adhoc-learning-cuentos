@@ -81,9 +81,16 @@ export default async function handler(
 
   // Validar API Key
   const apiKey = process.env.GEMINI_API_KEY;
+  console.log('API Key check:', { 
+    exists: !!apiKey, 
+    length: apiKey?.length,
+    firstChars: apiKey?.substring(0, 10),
+    allEnvKeys: Object.keys(process.env).filter(k => k.includes('GEMINI') || k.includes('API'))
+  });
+  
   if (!apiKey) {
-    console.error('GEMINI_API_KEY not configured');
-    return res.status(500).json({ error: 'Servicio no configurado correctamente' });
+    console.error('GEMINI_API_KEY not configured in environment variables');
+    return res.status(500).json({ error: 'API Key no configurada en el servidor' });
   }
 
   // Validar request body
@@ -227,11 +234,18 @@ export default async function handler(
     return res.status(200).json(response);
 
   } catch (error: any) {
-    console.error('Error generating story:', error);
+    console.error('Error generating story:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      statusText: error.statusText,
+      status: error.status
+    });
     
-    // No exponer detalles internos del error
+    // Exponer más detalles en desarrollo
     return res.status(500).json({ 
-      error: 'Error al generar el cuento. Por favor, intentá de nuevo.' 
+      error: 'Error al generar el cuento. Por favor, intentá de nuevo.',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 }
